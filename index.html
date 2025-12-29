@@ -1,0 +1,1057 @@
+<!DOCTYPE html>
+<html lang="id">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Peta Pangan Lokal Cerdas - Eduting</title>
+    <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" />
+    <link rel="stylesheet" href="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.css" />
+    <style>
+        :root {
+            --primary: #4a90e2;
+            --primary-light: #e1f0ff;
+            --primary-dark: #2a6ec6;
+            --secondary: #6bbd68;
+            --accent: #ff7e5f;
+            --text: #2c3e50;
+            --text-light: #7f8c8d;
+            --bg: #f8faff;
+            --card: #ffffff;
+            --notification: #fff3cd;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Poppins', sans-serif;
+        }
+
+        body {
+            background-color: var(--bg);
+            color: var(--text);
+            height: 100vh;
+            overflow: hidden;
+        }
+
+        .container {
+            display: flex;
+            height: 100vh;
+        }
+
+        /* Sidebar */
+        .sidebar {
+            width: 350px;
+            background-color: white;
+            border-right: 1px solid #e0e0e0;
+            display: flex;
+            flex-direction: column;
+            overflow: hidden;
+            box-shadow: 2px 0 10px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+
+        .sidebar-header {
+            padding: 15px;
+            background-color: var(--primary);
+            color: white;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .sidebar-title {
+            font-size: 18px;
+            font-weight: 600;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .sidebar-title i {
+            font-size: 20px;
+        }
+
+        .sidebar-content {
+            flex: 1;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        /* Notification */
+        .season-notification {
+            background-color: var(--notification);
+            padding: 12px;
+            border-radius: 8px;
+            margin-bottom: 15px;
+            border-left: 4px solid var(--accent);
+            display: flex;
+            gap: 10px;
+        }
+
+        .notification-icon {
+            color: var(--accent);
+            font-size: 18px;
+        }
+
+        .notification-content h4 {
+            font-size: 14px;
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+
+        .notification-content p {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        /* Filter Section */
+        .filter-section {
+            background-color: var(--primary-light);
+            padding: 15px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+        }
+
+        .filter-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 10px;
+            color: var(--primary-dark);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .filter-group {
+            margin-bottom: 15px;
+        }
+
+        .filter-group label {
+            display: block;
+            font-size: 13px;
+            margin-bottom: 5px;
+            color: var(--text);
+        }
+
+        .filter-group select, .filter-group input {
+            width: 100%;
+            padding: 8px 12px;
+            border: 1px solid #ddd;
+            border-radius: 6px;
+            font-size: 13px;
+        }
+
+        .filter-buttons {
+            display: flex;
+            gap: 10px;
+        }
+
+        .filter-btn {
+            flex: 1;
+            padding: 8px;
+            border-radius: 6px;
+            border: none;
+            font-size: 13px;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        .btn-primary {
+            background-color: var(--primary);
+            color: white;
+        }
+
+        .btn-outline {
+            background-color: white;
+            border: 1px solid var(--primary);
+            color: var(--primary);
+        }
+
+        /* Nutrition Info */
+        .nutrition-section {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 10px;
+            padding: 15px;
+            margin-bottom: 20px;
+        }
+
+        .nutrition-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 10px;
+        }
+
+        .nutrition-title {
+            font-size: 15px;
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .nutrition-age {
+            font-size: 13px;
+            color: var(--text-light);
+        }
+
+        .nutrition-bars {
+            margin-top: 15px;
+        }
+
+        .nutrition-item {
+            margin-bottom: 10px;
+        }
+
+        .nutrition-label {
+            display: flex;
+            justify-content: space-between;
+            font-size: 12px;
+            margin-bottom: 3px;
+        }
+
+        .nutrition-bar {
+            height: 6px;
+            background-color: #eee;
+            border-radius: 3px;
+            overflow: hidden;
+        }
+
+        .nutrition-progress {
+            height: 100%;
+            border-radius: 3px;
+        }
+
+        /* Recommendation Section */
+        .recommendation-section {
+            margin-top: 20px;
+        }
+
+        .section-title {
+            font-size: 16px;
+            font-weight: 600;
+            margin-bottom: 15px;
+            color: var(--text);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .recommendation-list {
+            display: flex;
+            flex-direction: column;
+            gap: 12px;
+        }
+
+        .recommendation-card {
+            background-color: white;
+            border: 1px solid #e0e0e0;
+            border-radius: 8px;
+            padding: 12px;
+            cursor: pointer;
+            transition: all 0.3s;
+            position: relative;
+        }
+
+        .recommendation-card:hover {
+            border-color: var(--primary);
+            box-shadow: 0 2px 8px rgba(74, 144, 226, 0.2);
+        }
+
+        .recommendation-header {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+        }
+
+        .recommendation-name {
+            font-size: 14px;
+            font-weight: 500;
+        }
+
+        .recommendation-distance {
+            font-size: 12px;
+            color: var(--text-light);
+        }
+
+        .recommendation-details {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 8px;
+        }
+
+        .recommendation-tags {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 5px;
+        }
+
+        .tag {
+            padding: 3px 8px;
+            font-size: 10px;
+            border-radius: 10px;
+            background-color: var(--primary-light);
+            color: var(--primary-dark);
+        }
+
+        .favorite-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: none;
+            border: none;
+            color: #ccc;
+            cursor: pointer;
+            font-size: 16px;
+            transition: color 0.3s;
+        }
+
+        .favorite-btn.active {
+            color: var(--accent);
+        }
+
+        /* Map Container */
+        .map-container {
+            flex: 1;
+            position: relative;
+        }
+
+        #map {
+            height: 100%;
+            width: 100%;
+        }
+
+        /* Location Button */
+        .location-btn {
+            position: absolute;
+            bottom: 20px;
+            right: 20px;
+            background-color: white;
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: pointer;
+            z-index: 1000;
+        }
+
+        /* Marker Customization */
+        .marker-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            background-color: var(--primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            box-shadow: 0 0 0 2px white;
+        }
+
+        .marker-icon.food {
+            background-color: #6bbd68;
+        }
+
+        .marker-icon.health {
+            background-color: #4a90e2;
+        }
+
+        .marker-icon.gov {
+            background-color: #ff7e5f;
+        }
+
+        /* Popup Customization */
+        .leaflet-popup-content {
+            min-width: 220px;
+            margin: 12px;
+        }
+
+        .popup-header {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            margin-bottom: 10px;
+        }
+
+        .popup-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+        }
+
+        .popup-icon.food {
+            background-color: #6bbd68;
+        }
+
+        .popup-icon.health {
+            background-color: #4a90e2;
+        }
+
+        .popup-icon.gov {
+            background-color: #ff7e5f;
+        }
+
+        .popup-title {
+            font-weight: 600;
+            font-size: 14px;
+        }
+
+        .popup-details {
+            font-size: 12px;
+            color: var(--text-light);
+            margin-bottom: 10px;
+        }
+
+        .popup-features {
+            margin-top: 10px;
+        }
+
+        .feature-item {
+            display: flex;
+            align-items: center;
+            gap: 5px;
+            font-size: 12px;
+            margin-bottom: 5px;
+        }
+
+        .feature-item i {
+            color: var(--primary);
+            width: 15px;
+        }
+
+        .popup-actions {
+            margin-top: 15px;
+            display: flex;
+            gap: 10px;
+        }
+
+        .popup-btn {
+            flex: 1;
+            padding: 6px;
+            font-size: 12px;
+            border-radius: 4px;
+            border: none;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 5px;
+        }
+
+        /* Routing */
+        .leaflet-routing-container {
+            background-color: white;
+            padding: 10px;
+            border-radius: 5px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.2);
+            max-height: 200px;
+            overflow-y: auto;
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .container {
+                flex-direction: column;
+            }
+            
+            .sidebar {
+                width: 100%;
+                height: 350px;
+            }
+            
+            .map-container {
+                height: calc(100vh - 350px);
+            }
+        }
+
+        /* Animation for seasonal markers */
+        .pulse-marker {
+            animation: pulse 2s infinite;
+        }
+        @keyframes pulse {
+            0% { transform: scale(1); }
+            50% { transform: scale(1.2); }
+            100% { transform: scale(1); }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+            <div class="sidebar-content">
+                <!-- Season Notification -->
+                <div class="season-notification" id="season-notification">
+                    <div class="notification-icon">
+                        <i class="fas fa-seedling"></i>
+                    </div>
+                    <div class="notification-content">
+                        <h4>Musim Panen di Daerah Anda</h4>
+                        <p id="season-message">Memuat informasi musim...</p>
+                    </div>
+                </div>
+                
+                <!-- Filter Section -->
+                <div class="filter-section">
+                    <div class="filter-title">
+                        <i class="fas fa-filter"></i>
+                        <span>Filter Pencarian</span>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="food-type">Jenis Pangan</label>
+                        <select id="food-type">
+                            <option value="all">Semua Jenis</option>
+                            <option value="protein">Sumber Protein</option>
+                            <option value="carb">Sumber Karbohidrat</option>
+                            <option value="vegetable">Sayuran</option>
+                            <option value="fruit">Buah-buahan</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="distance">Jarak Maksimal (km)</label>
+                        <input type="range" id="distance" min="1" max="20" value="5">
+                        <div style="text-align: center; font-size: 12px; margin-top: 5px;">
+                            <span id="distance-value">5</span> km
+                        </div>
+                    </div>
+                    
+                    <div class="filter-group">
+                        <label for="facility-type">Fasilitas</label>
+                        <select id="facility-type">
+                            <option value="all">Semua Fasilitas</option>
+                            <option value="market">Pasar/Warung</option>
+                            <option value="posyandu">Posyandu</option>
+                            <option value="puskesmas">Puskesmas</option>
+                            <option value="government">Program Pemerintah</option>
+                        </select>
+                    </div>
+                    
+                    <div class="filter-buttons">
+                        <button class="filter-btn btn-primary" id="search-btn">
+                            <i class="fas fa-search"></i> Cari
+                        </button>
+                        <button class="filter-btn btn-outline" id="reset-btn">
+                            <i class="fas fa-sync-alt"></i> Reset
+                        </button>
+                    </div>
+                </div>
+                
+               
+                
+                <!-- Recommendation Section -->
+                <div class="recommendation-section">
+                    <div class="section-title">
+                        <i class="fas fa-lightbulb"></i>
+                        <span>Rekomendasi Terdekat</span>
+                    </div>
+                    
+                    <div class="recommendation-list" id="recommendation-list">
+                        <!-- Recommendations will be loaded dynamically -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <!-- Map Container -->
+        <div class="map-container">
+            <div id="map"></div>
+            <div class="location-btn" id="locate-btn">
+                <i class="fas fa-location-arrow"></i>
+            </div>
+        </div>
+    </div>
+
+    <!-- Script Libraries -->
+    <script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js"></script>
+    <script src="https://unpkg.com/leaflet-routing-machine@3.2.12/dist/leaflet-routing-machine.js"></script>
+    <script>
+        // API Configuration
+        const GEMINI_API_KEY = "AIzaSyBGXywnksPv6PgcQVPHJaMvhXJiMi5jqjo"; // Ganti dengan API key Anda
+        const GEMINI_API_URL = `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${GEMINI_API_KEY}`;
+        
+        // Initialize the map
+        const map = L.map('map').setView([-7.787539719579772, 113.37631155622238], 13); // Default to Jakarta coordinates
+        
+        // Add OpenStreetMap tiles
+        L.tileLayer('https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png', {
+            attribution: '&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+        }).addTo(map);
+        
+        // Initialize routing control
+        const routingControl = L.Routing.control({
+            waypoints: [],
+            routeWhileDragging: true,
+            showAlternatives: false,
+            addWaypoints: false,
+            draggableWaypoints: false,
+            fitSelectedRoutes: true,
+            lineOptions: {
+                styles: [{color: '#4a90e2', opacity: 0.7, weight: 5}]
+            },
+            createMarker: function() { return null; } // Disable default markers
+        }).addTo(map);
+        
+        // Hide routing control initially
+        routingControl.hide();
+        
+        // Sample data for markers (in a real app, this would come from an API)
+        const locations = [
+            {
+                id: 1,
+                name: "Pecel Sambel Tumpang Semampir Dari Kediri",
+                type: "food",
+                position: [-7.760842903062802, 113.40216634505434],
+                address: "Jl. Raya Panglima Sudirman No.59, Ps. Semampir, Semampir, Kec. Kraksaan, Kabupaten Probolinggo, Jawa Timur 67282",
+                hours: "05.00-15.00",
+                products: ["Tempe", "Dading Sapi", "Sayur", "Telur"],
+                distance: 0.5,
+                seasonal: true,
+                seasonalProducts: ["Ikan", "Sayur", "Tempe"]
+            },
+            {
+                id: 2,
+                name: "Puskesmas Pajarakan",
+                type: "health",
+                position: [-7.766686837602524, 113.37855081810908],
+                address: "Jl. Raya Pajarakan No.100, Pandean, Sukokerto, Kec. Pajarakan, Kabupaten Probolinggo, Jawa Timur 67281",
+                hours: "Senin & Kamis, 08.00-12.00",
+                services: ["Vitamin", "Imunisasi", "Pemeriksaan"],
+                distance: 1.2
+            },
+            {
+                id: 3,
+                name: "Pasar Genggong",
+                type: "food",
+                position: [-7.785529270502287, 113.37697629361652],
+                address: "697G+QQ4, Bawangan, Pajarakan Kulon, Kec. Pajarakan, Kabupaten Probolinggo, Jawa Timur 67281",
+                hours: "Setiap pagi",
+                products: ["Sayur", "Tempe", "Daging"],
+                distance: 2.1,
+                seasonal: true,
+                seasonalProducts: ["Sayur Musiman", "Buah Lokal"]
+            },
+            {
+                id: 4,
+                name: "Pasar Semampir Kraksaan",
+                type: "Food",
+                position: [-7.763798306234828, 113.40943935306078],
+                address: "6CP5+5P5, Jl. MT. Haryono, Ps. Semampir, Semampir, Kec. Kraksaan, Kabupaten Probolinggo, Jawa Timur 67282",
+                hours: "24 Jam",
+                programs: ["Beras", "Telur", "Tempe", "Tahu"],
+                distance: 1.5
+            }
+        ];
+        
+        // Favorites storage
+        let favorites = JSON.parse(localStorage.getItem('foodMapFavorites')) || [];
+        
+        // Create custom icons
+        function createCustomIcon(type) {
+            let className = 'marker-icon';
+            if (type === 'food') className += ' food';
+            if (type === 'health') className += ' health';
+            if (type === 'gov') className += ' gov';
+            
+            return L.divIcon({
+                className: className,
+                html: '<i class="fas ' + 
+                      (type === 'food' ? 'fa-shopping-basket' : 
+                       type === 'health' ? 'fa-clinic-medical' : 'fa-landmark') + '"></i>',
+                iconSize: [30, 30],
+                iconAnchor: [15, 15]
+            });
+        }
+        
+        // Add markers to the map
+        const markers = [];
+        locations.forEach(location => {
+            const marker = L.marker(location.position, {
+                icon: createCustomIcon(location.type)
+            }).addTo(map);
+            
+            // Check if location is favorite
+            const isFavorite = favorites.includes(location.id);
+            
+            // Create popup content
+            let popupContent = `
+                <div class="popup-header">
+                    <div class="popup-icon ${location.type}">
+                        <i class="fas ${location.type === 'food' ? 'fa-shopping-basket' : 
+                                       location.type === 'health' ? 'fa-clinic-medical' : 'fa-landmark'}"></i>
+                    </div>
+                    <div class="popup-title">${location.name}</div>
+                </div>
+                <div class="popup-details">
+                    <div>${location.address}</div>
+                    <div>Buka: ${location.hours}</div>
+                </div>
+            `;
+            
+            if (location.type === 'food') {
+                popupContent += `
+                    <div class="popup-features">
+                        <div style="font-weight:500; margin:10px 0 5px;">Bahan Tersedia:</div>
+                        ${location.products.map(product => `
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>${product}${location.seasonalProducts?.includes(product) ? ' (Musim)' : ''}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else if (location.type === 'health') {
+                popupContent += `
+                    <div class="popup-features">
+                        <div style="font-weight:500; margin:10px 0 5px;">Layanan:</div>
+                        ${location.services.map(service => `
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>${service}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            } else {
+                popupContent += `
+                    <div class="popup-features">
+                        <div style="font-weight:500; margin:10px 0 5px;">Program:</div>
+                        ${location.programs.map(program => `
+                            <div class="feature-item">
+                                <i class="fas fa-check-circle"></i>
+                                <span>${program}</span>
+                            </div>
+                        `).join('')}
+                    </div>
+                `;
+            }
+            
+            popupContent += `
+                <div class="popup-actions">
+                    <button class="popup-btn" style="background-color:#4a90e2; color:white;" onclick="showRoute(${location.id})">
+                        <i class="fas fa-directions"></i> Rute
+                    </button>
+                    <button class="popup-btn" style="background-color:#${isFavorite ? 'ff4757' : '6bbd68'}; color:white;" onclick="toggleFavorite(${location.id}, this)">
+                        <i class="fas fa-heart"></i> ${isFavorite ? 'Hapus' : 'Simpan'}
+                    </button>
+                </div>
+            `;
+            
+            marker.bindPopup(popupContent);
+            
+            // Store reference to marker
+            markers.push({
+                id: location.id,
+                marker: marker,
+                data: location
+            });
+        });
+        
+        // Function to show route
+        function showRoute(locationId) {
+            const location = markers.find(m => m.id === locationId)?.data;
+            if (!location) return;
+            
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = [position.coords.latitude, position.coords.longitude];
+                        routingControl.setWaypoints([
+                            L.latLng(userLocation[0], userLocation[1]),
+                            L.latLng(location.position[0], location.position[1])
+                        ]);
+                        routingControl.show();
+                        
+                        // Open Google Maps in new tab
+                        window.open(`https://www.google.com/maps/dir/?api=1&origin=${userLocation[0]},${userLocation[1]}&destination=${location.position[0]},${location.position[1]}&travelmode=walking`);
+                    },
+                    (error) => {
+                        alert("Tidak dapat mendapatkan lokasi Anda: " + error.message);
+                    }
+                );
+            } else {
+                alert("Geolocation tidak didukung oleh browser Anda");
+            }
+        }
+        
+        // Function to toggle favorite
+        function toggleFavorite(locationId, button) {
+            const index = favorites.indexOf(locationId);
+            if (index === -1) {
+                favorites.push(locationId);
+                button.innerHTML = '<i class="fas fa-heart"></i> Hapus';
+                button.style.backgroundColor = '#ff4757';
+            } else {
+                favorites.splice(index, 1);
+                button.innerHTML = '<i class="fas fa-heart"></i> Simpan';
+                button.style.backgroundColor = '#6bbd68';
+            }
+            
+            // Save to localStorage
+            localStorage.setItem('foodMapFavorites', JSON.stringify(favorites));
+            
+            // Update recommendation list
+            updateRecommendationList();
+        }
+        
+        // Location button handler
+        document.getElementById('locate-btn').addEventListener('click', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = [position.coords.latitude, position.coords.longitude];
+                        map.setView(userLocation, 15);
+                        
+                        // Add user location marker
+                        L.marker(userLocation, {
+                            icon: L.divIcon({
+                                className: 'marker-icon',
+                                html: '<i class="fas fa-user"></i>',
+                                iconSize: [30, 30],
+                                iconAnchor: [15, 15]
+                            })
+                        }).addTo(map).bindPopup("Lokasi Anda").openPopup();
+                        
+                        // Get seasonal information based on location
+                        getSeasonalInformation(userLocation);
+                    },
+                    (error) => {
+                        alert("Tidak dapat mendapatkan lokasi Anda: " + error.message);
+                        // Fallback to default location
+                        getSeasonalInformation([-7.787539719579772, 113.37631155622238]);
+                    }
+                );
+            } else {
+                alert("Geolocation tidak didukung oleh browser Anda");
+                // Fallback to default location
+                getSeasonalInformation([-7.787539719579772, 113.37631155622238]);
+            }
+        });
+        
+        // Update distance value display
+        const distanceSlider = document.getElementById('distance');
+        const distanceValue = document.getElementById('distance-value');
+        
+        distanceSlider.addEventListener('input', () => {
+            distanceValue.textContent = distanceSlider.value;
+        });
+        
+        // Search button handler
+        document.getElementById('search-btn').addEventListener('click', () => {
+            const selectedType = document.getElementById('food-type').value;
+            const maxDistance = parseFloat(distanceSlider.value);
+            const facilityType = document.getElementById('facility-type').value;
+            
+            // Filter markers based on criteria
+            markers.forEach(marker => {
+                const isVisible = 
+                    (selectedType === 'all' || 
+                     (selectedType === 'protein' && marker.data.products?.some(p => ['tempe', 'ikan', 'telur'].includes(p.toLowerCase()))) ||
+                     (selectedType === 'carb' && marker.data.products?.includes('Beras Merah')) ||
+                     (selectedType === 'vegetable' && marker.data.products?.some(p => ['sayur', 'sayuran', 'sayur musiman'].includes(p.toLowerCase()))) ||
+                     (selectedType === 'fruit' && marker.data.products?.some(p => p.toLowerCase().includes('buah')))) &&
+                    (facilityType === 'all' || 
+                     (facilityType === 'market' && marker.data.type === 'food') ||
+                     (facilityType === 'posyandu' && marker.data.type === 'health') ||
+                     (facilityType === 'puskesmas' && marker.data.type === 'health') ||
+                     (facilityType === 'government' && marker.data.type === 'gov')) &&
+                    marker.data.distance <= maxDistance;
+                
+                if (isVisible) {
+                    marker.marker.addTo(map);
+                } else {
+                    map.removeLayer(marker.marker);
+                }
+            });
+            
+            // Update recommendation list
+            updateRecommendationList();
+        });
+        
+        // Reset button handler
+        document.getElementById('reset-btn').addEventListener('click', () => {
+            document.getElementById('food-type').value = 'all';
+            document.getElementById('distance').value = '5';
+            document.getElementById('distance-value').textContent = '5';
+            document.getElementById('facility-type').value = 'all';
+            
+            // Show all markers
+            markers.forEach(marker => {
+                marker.marker.addTo(map);
+            });
+            
+            // Update recommendation list
+            updateRecommendationList();
+        });
+        
+        // Update recommendation list
+        function updateRecommendationList() {
+            const recommendationList = document.getElementById('recommendation-list');
+            recommendationList.innerHTML = '';
+            
+            // Sort by distance and favorites first
+            const sortedMarkers = [...markers]
+                .filter(marker => map.hasLayer(marker.marker))
+                .sort((a, b) => {
+                    // Favorites first
+                    const aIsFavorite = favorites.includes(a.id);
+                    const bIsFavorite = favorites.includes(b.id);
+                    if (aIsFavorite && !bIsFavorite) return -1;
+                    if (!aIsFavorite && bIsFavorite) return 1;
+                    
+                    // Then by distance
+                    return a.data.distance - b.data.distance;
+                });
+            
+            if (sortedMarkers.length === 0) {
+                recommendationList.innerHTML = '<p style="text-align:center; color:var(--text-light); font-size:13px;">Tidak ada hasil yang sesuai filter</p>';
+                return;
+            }
+            
+            sortedMarkers.forEach(marker => {
+                const isFavorite = favorites.includes(marker.id);
+                const location = marker.data;
+                
+                const card = document.createElement('div');
+                card.className = 'recommendation-card';
+                card.onclick = () => {
+                    map.setView(location.position, 16);
+                    marker.marker.openPopup();
+                };
+                
+                card.innerHTML = `
+                    <button class="favorite-btn ${isFavorite ? 'active' : ''}" onclick="event.stopPropagation(); toggleFavorite(${location.id}, this.parentElement.querySelector('.favorite-btn'))">
+                        <i class="fas fa-heart"></i>
+                    </button>
+                    <div class="recommendation-header">
+                        <div class="recommendation-name">${location.name}</div>
+                        <div class="recommendation-distance">${location.distance} km</div>
+                    </div>
+                    <div class="recommendation-details">${location.address}</div>
+                    <div class="recommendation-tags">
+                        ${location.type === 'food' ? 
+                          location.products.map(product => `<span class="tag">${product}</span>`).join('') :
+                          location.type === 'health' ?
+                          location.services.map(service => `<span class="tag">${service}</span>`).join('') :
+                          location.programs.map(program => `<span class="tag">${program}</span>`).join('')}
+                    </div>
+                `;
+                
+                recommendationList.appendChild(card);
+            });
+        }
+        
+        // Get seasonal information using Gemini API or fallback
+        async function getSeasonalInformation(userLocation) {
+            const seasonMessage = document.getElementById('season-message');
+            seasonMessage.textContent = "Mendeteksi musim di lokasi Anda...";
+            
+            try {
+                // In a real app, you would use actual location data
+                // For demo, we'll use a prompt that simulates Jakarta location
+                const prompt = `Berdasarkan lokasi di (latitude ${userLocation[0].toFixed(4)}, longitude ${userLocation[1].toFixed(4)}) pada bulan ${new Date().toLocaleString('id-ID', { month: 'long' })}, berikan informasi tentang musim panen pangan lokal yang sedang berlangsung atau akan datang dalam 1-2 bulan, dalam 1-2 kalimat singkat dalam bahasa Indonesia. Fokus pada bahan pangan yang bergizi untuk pencegahan stunting. jangan menjawab Di sekitar koordinat tersebut (yang berada di Jawa Timur) ganti dengan narasi wilayah sekitar anda tanpa menyebutkan nama wilayah. berikan narasi ajakan untuk membeli produk pangan lokal disekitar dengan emoticon.
+                
+                const response = await fetch(GEMINI_API_URL, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json'
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: prompt
+                            }]
+                        }]
+                    })
+                });
+                
+                if (!response.ok) {
+                    throw new Error('API request failed');
+                }
+                
+                const result = await response.json();
+                
+                if (result.candidates && result.candidates[0].content.parts[0].text) {
+                    const message = result.candidates[0].content.parts[0].text;
+                    seasonMessage.textContent = message;
+                } else {
+                    throw new Error('Invalid API response format');
+                }
+                
+                // Highlight seasonal products on the map
+                highlightSeasonalProducts();
+            } catch (error) {
+                console.error('Error getting seasonal information:', error);
+                // Fallback message based on current month
+                const currentMonth = new Date().getMonth();
+                let fallbackMessage = "";
+                
+                // Simple seasonal information based on month (for Indonesia)
+                if (currentMonth >= 0 && currentMonth <= 2) { // Jan-Mar
+                    fallbackMessage = "Musim hujan, panen melimpah untuk sayuran seperti bayam, kangkung, dan sawi. Juga musim buah mangga dan pepaya.";
+                } else if (currentMonth >= 3 && currentMonth <= 5) { // Apr-Jun
+                    fallbackMessage = "Musim kemarau awal, panen baik untuk kacang-kacangan seperti kacang tanah dan kedelai, serta buah pisang.";
+                } else if (currentMonth >= 6 && currentMonth <= 8) { // Jul-Sep
+                    fallbackMessage = "Puncak musim kemarau, panen jagung dan ubi-ubian melimpah. Juga musim buah jeruk dan jambu biji.";
+                } else { // Oct-Dec
+                    fallbackMessage = "Awal musim hujan, panen ikan air tawar meningkat. Sayuran seperti kangkung dan bayam mulai tumbuh subur.";
+                }
+                
+                seasonMessage.textContent = fallbackMessage;
+                highlightSeasonalProducts();
+            }
+        }
+        
+        // Highlight seasonal products on the map
+        function highlightSeasonalProducts() {
+            markers.forEach(marker => {
+                if (marker.data.seasonal) {
+                    // Pulse animation for seasonal markers
+                    marker.marker.setZIndexOffset(1000);
+                    
+                    // Add a pulsing effect
+                    const icon = marker.marker.getIcon();
+                    icon.options.className += ' pulse-marker';
+                    marker.marker.setIcon(icon);
+                }
+            });
+        }
+        
+        // Initialize with default recommendations
+        updateRecommendationList();
+        
+        // Get seasonal information when page loads
+        window.addEventListener('load', () => {
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        const userLocation = [position.coords.latitude, position.coords.longitude];
+                        getSeasonalInformation(userLocation);
+                    },
+                    (error) => {
+                        console.error("Geolocation error:", error);
+                        // Fallback to Jakarta coordinates
+                        getSeasonalInformation([-7.787539719579772, 113.37631155622238]);
+                    }
+                );
+            } else {
+                console.log("Geolocation not supported");
+                // Fallback to Jakarta coordinates
+                getSeasonalInformation([-7.787539719579772, 113.37631155622238]);
+            }
+        });
+    </script>
+</body>
+</html>
